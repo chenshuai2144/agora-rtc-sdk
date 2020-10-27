@@ -3,14 +3,89 @@ import { PageContainer, PageLoading } from '@ant-design/pro-layout';
 import { Card, Alert, notification, Space } from 'antd';
 import ProForm, { ProFormText } from '@ant-design/pro-form';
 import AgoraRTC from 'agora-rtc-sdk';
+import {
+  AudioMutedOutlined,
+  AudioOutlined,
+  VideoCameraAddOutlined,
+  VideoCameraOutlined,
+} from '@ant-design/icons';
 
 const APP_ID = '26bdaf3f250242cc91c40775c660988e';
+
+const VideoToolBar: React.FC<{
+  stream: any;
+}> = ({ stream }) => {
+  const [hasAudio, setHasAudio] = useState(false);
+  const [hasVideo, setHasVideo] = useState(false);
+
+  useEffect(() => {
+    setHasAudio(stream.isAudioOn());
+    setHasVideo(stream.isVideoOn());
+  }, []);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        backgroundColor: '#000',
+        padding: '8px 24px',
+        fontSize: 18,
+      }}
+    >
+      <Space
+        style={{
+          color: '#fff',
+        }}
+        size={16}
+      >
+        {stream.audio && (
+          <span
+            style={{
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              if (hasAudio) {
+                stream.muteAudio();
+              } else {
+                stream.unmuteAudio();
+              }
+              setHasAudio(stream.isAudioOn());
+            }}
+          >
+            {hasAudio ? <AudioMutedOutlined /> : <AudioOutlined />}
+          </span>
+        )}
+        {stream.video && (
+          <span
+            style={{
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              if (hasVideo) {
+                stream.muteVideo();
+              } else {
+                stream.unmuteVideo();
+              }
+              setHasVideo(stream.isVideoOn());
+            }}
+          >
+            {hasVideo ? <VideoCameraOutlined /> : <VideoCameraAddOutlined />}
+          </span>
+        )}
+      </Space>
+    </div>
+  );
+};
 
 const LocalVideoBox: React.FC<{
   clientRef: React.MutableRefObject<any>;
   uid: string;
 }> = ({ uid, clientRef }) => {
   const domRef = useRef<string>(`local_${Date.now()}`);
+  const [isInit, setIsInit] = useState(false);
   const localStreamRef = useRef<any>();
   useEffect(() => {
     const localStream = AgoraRTC.createStream({
@@ -31,6 +106,7 @@ const LocalVideoBox: React.FC<{
           console.log('发布成功');
           console.error(err);
         });
+        setIsInit(true);
       },
       (err: any) => {
         console.error('获取本地流失败', err);
@@ -40,13 +116,20 @@ const LocalVideoBox: React.FC<{
 
   return (
     <div
-      id={domRef.current}
       style={{
-        width: 400,
-        height: 200,
-        backgroundColor: 'rgba(0,0,0,0.65)',
+        position: 'relative',
       }}
-    />
+    >
+      <div
+        id={domRef.current}
+        style={{
+          width: 400,
+          height: 240,
+          backgroundColor: 'rgba(0,0,0,0.65)',
+        }}
+      />
+      {isInit && <VideoToolBar stream={localStreamRef.current} />}
+    </div>
   );
 };
 
@@ -60,14 +143,21 @@ const OtherVideoBox: React.FC<{
   }, []);
   return (
     <div
-      key={uid}
-      id={domRef.current}
       style={{
-        width: 400,
-        height: 200,
-        backgroundColor: 'rgba(0,0,0,0.65)',
+        position: 'relative',
       }}
-    />
+    >
+      <div
+        key={uid}
+        id={domRef.current}
+        style={{
+          width: 400,
+          height: 240,
+          backgroundColor: 'rgba(0,0,0,0.65)',
+        }}
+      />
+      <VideoToolBar stream={steam} />
+    </div>
   );
 };
 
