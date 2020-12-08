@@ -16,4 +16,4 @@ jobs:
         with:
           deploy_key: ${{ secrets.ACTION_TOKEN }}
           publish_dir: ./public
-          force_orphan: true
+
